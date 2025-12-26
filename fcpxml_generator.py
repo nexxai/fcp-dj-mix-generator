@@ -27,6 +27,8 @@ Example:
 import sys
 import re
 import os
+import subprocess
+import json
 from urllib.parse import quote
 
 
@@ -125,6 +127,49 @@ def calculate_last_track_duration(last_timestamp, total_length):
     duration_frames = (duration_frames // 1001) * 1001
 
     return f"{duration_frames}/24000s"
+
+
+def get_audio_duration(audio_file_path):
+    """Get duration of audio file using ffprobe"""
+    try:
+        # Run ffprobe to get file info in JSON format
+        cmd = [
+            "ffprobe",
+            "-v",
+            "quiet",
+            "-print_format",
+            "json",
+            "-show_format",
+            audio_file_path,
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        # Parse JSON output
+        data = json.loads(result.stdout)
+
+        # Extract duration from format section
+        duration_str = data["format"]["duration"]
+        duration_seconds = float(duration_str)
+
+        return duration_seconds
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error running ffprobe: {e}")
+        sys.exit(1)
+    except (KeyError, ValueError) as e:
+        print(f"Error parsing ffprobe output: {e}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print("Error: ffprobe not found. Please install ffmpeg/ffprobe.")
+        sys.exit(1)
+
+
+def seconds_to_hhmmss(seconds):
+    """Convert seconds to HH:MM:SS format"""
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 
 def generate_title_spine(track_num, artist, track_title, offset, duration):
@@ -377,19 +422,11 @@ if __name__ == "__main__":
 
     print(f"✅ Found {len(tracks)} tracks")
 
-    # Prompt for total video length
-    while True:
-        total_length = input("\n⏱️  Enter total video length (HH:MM:SS): ").strip()
-        # Validate format
-        if re.match(r"^\d{1,2}:\d{2}:\d{2}", total_length):
-            # Pad hours to 2 digits if needed
-            parts = total_length.split(":")
-            total_length = f"{int(parts[0]):02d}:{parts[1]}:{parts[2]}"
-            break
-        else:
-            print("❌ Invalid format. Please use HH:MM:SS (e.g., 01:52:30)")
+    # Get total video length from audio file
+    audio_duration_seconds = get_audio_duration(audio_file)
+    total_length = seconds_to_hhmmss(audio_duration_seconds)
 
-    print(f"✅ Total video length: {total_length}")
+    print(f"✅ Total video length (from audio): {total_length}")
 
     # Generate XML
     xml_content = generate_xml(
