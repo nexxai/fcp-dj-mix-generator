@@ -80,7 +80,7 @@ python3 fcpxml_generator.py Tracklist.txt "Summer 2025 Mixtape" background.png m
 
 If everything was imported correctly, you should see something similar to this:
 
-![Final Cut Pro](final_cut_pro.png)
+![Final Cut Pro](final-cut-pro.png)
 
 ### YouTube Chapters Generator
 
