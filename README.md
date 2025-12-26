@@ -67,6 +67,21 @@ python3 fcpxml_generator.py Tracklist.txt "Summer 2025 Mixtape" background.png m
 - Adds animated track title overlays that appear at each timestamp
 - Includes fade-out effects and transitions for the final track
 
+#### Instructions
+
+1. Double-click the generated `.fcpxml` file to open in Final Cut Pro
+2. Choose an existing bundle to import into or create a new one
+3. Once in the main FCP window, select the bundle you imported to, and then
+   double click the resource you just made. This should open the video sequence
+   you just created onto the timeline.
+4. Edit the video sequence as needed, such as adding any other transitions and
+   fade effects
+5. Export the video sequence to your preferred format and share it with your audience
+
+If everything was imported correctly, you should see something similar to this:
+
+![Final Cut Pro](final_cut_pro.png)
+
 ### YouTube Chapters Generator
 
 Generates YouTube-compatible chapter timestamps from your tracklist.
