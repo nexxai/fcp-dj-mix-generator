@@ -3,11 +3,25 @@
 FCPXML Generator for Mixtape Tracklist
 Converts tracklist timestamps to Final Cut Pro XML format
 
+Description:
+    The script will generate an FCPXML file with the given mixtape name and background image.
+    Simply double click the XML file to open it in Final Cut Pro.  You will still need to doublecheck
+    that the correct image was imported, and that the last title goes to the very end of the
+    audio track.
+
 Usage:
     python generate_fcpxml.py <tracklist_file> <mixtape_name> <background_image>
 
 Example:
     python generate_fcpxml.py Tracklist.txt "2025 Summer Mixtape" background.png
+
+Note: This script expects a tracklist file with the following format, starting at 00:00:00:
+    Number. Artist - Track Title - HH:MM:SS
+
+Example:
+    1. Artist 1 - Track 1 - 00:00:00
+    2. Artist 2 - Track 2 - 00:05:36
+    3. Artist 3 - Track 3 - 00:11:12
 """
 
 import sys
@@ -119,7 +133,7 @@ def generate_title_spine(track_num, artist, track_title, offset, duration):
     artist_escaped = escape_xml(artist)
     track_escaped = escape_xml(track_title)
 
-    return f'''            <!-- Track {track_num}: {artist} - {offset} - duration: {duration} -->
+    return f"""            <!-- Track {track_num}: {artist} - {offset} - duration: {duration} -->
             <spine lane="2" offset="{offset}">
                 <title ref="r6" offset="0s" name="Track {track_num}" start="86495409/24000s" duration="{duration}">
                     <param name="Layout Method" key="9999/10003/13260/11488/2/314" value="1 (Paragraph)"/>
@@ -172,7 +186,7 @@ def generate_title_spine(track_num, artist, track_title, offset, duration):
                         <text-style font="Exan" fontSize="88" fontFace="Regular" fontColor="1 1 1 1" tabStops="724.965C"/>
                     </text-style-def>
                 </title>
-            </spine>'''
+            </spine>"""
 
 
 def get_frames(duration_str):
@@ -222,14 +236,14 @@ def generate_xml(
     if last_duration:
         last_duration_s = get_frames(last_duration) / 24000
         fade_start_s = max(0, last_duration_s - 5)  # Ensure not negative
-        opacity_animation = f'''<param name="Opacity" key="9999/10003/13260/11488/4/13051/1000/1044">
+        opacity_animation = f"""<param name="Opacity" key="9999/10003/13260/11488/4/13051/1000/1044">
                 <keyframeAnimation>
                     <keyframe time="0s" value="0"/>
                     <keyframe time="10s" value="1"/>
                     <keyframe time="{fade_start_s}s" value="1"/>
                     <keyframe time="{last_duration_s}s" value="0"/>
                 </keyframeAnimation>
-            </param>'''
+            </param>"""
         # Replace the static opacity param in the last title
         old_param = '<param name="Opacity" key="9999/10003/13260/11488/4/13051/1000/1044" value="0"/>'
         # Replace the last occurrence
@@ -238,7 +252,7 @@ def generate_xml(
         )[::-1]
 
     # Complete XML template
-    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fcpxml>
 
 <fcpxml version="1.12">
@@ -319,7 +333,7 @@ def generate_xml(
             <match-ratings value="favorites"/>
         </smart-collection>
     </library>
-</fcpxml>'''
+</fcpxml>"""
 
     return xml
 
