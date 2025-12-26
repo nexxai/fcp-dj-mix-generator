@@ -27,7 +27,6 @@ Example:
 import sys
 import re
 import os
-from pathlib import Path
 from urllib.parse import quote
 
 
