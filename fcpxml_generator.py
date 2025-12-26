@@ -252,7 +252,7 @@ def generate_xml(
 
     # Create library name from mixtape name (sanitize for filesystem)
     library_name = re.sub(r'[<>:"/\\|?*]', "", mixtape_name).replace(" ", "_")
-    library_location = f"file:///Users/nexxai/Movies/{library_name}.fcpbundle/"
+    library_location = f"{library_name}.fcpbundle/"
 
     # Generate all title spines
     title_spines = []
@@ -460,10 +460,10 @@ if __name__ == "__main__":
 
     print(f"✅ Generated FCPXML with {len(tracks)} tracks")
     print(f"📁 Saved to: {output_file}")
-    print(f"🎵 Mixtape: {mixtape_name}")
-    print(f"🖼️  Background: {background_image}")
+    print(f"🎵 Name: {mixtape_name}")
+    print(f"🖼️ Background Image: {background_image}")
     print(f"🎧 Audio: {audio_file}")
     print("\nTimestamp conversions:")
-    for i, (artist, _, timestamp) in enumerate(tracks, 1):
+    for i, (artist, track_title, timestamp) in enumerate(tracks, 1):
         frames = timestamp_to_frames(timestamp)
-        print(f"  Track {i:2d}: {timestamp} → {frames} - {artist}")
+        print(f"  Track {i:2d}: {timestamp} → {artist} - {track_title}")
