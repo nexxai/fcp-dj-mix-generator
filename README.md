@@ -1,14 +1,20 @@
-# DJ Mix Final Cut Pro Tools
+# Final Cut Pro / DJ Mix Generator
 
-A set of Python scripts to convert DJ mixtape tracklists into formats suitable for video production and YouTube uploads.
+A set of Python scripts to convert DJ mixtape tracklists into formats suitable
+for video production and YouTube uploads.
 
 ## Features
 
-- **FCPXML Generator** (`fcpxml_generator.py`): Creates Final Cut Pro XML files with automatic track title overlays, transitions, and fade effects for professional-looking mixtape videos.
-- **YouTube Chapters Generator** (`youtube_chapters.py`): Converts tracklists into YouTube-compatible chapter timestamps for video descriptions.
+- **FCPXML Generator** (`fcpxml_generator.py`): Creates Final Cut Pro XML files
+  with automatic track title overlays, transitions, and fade effects for
+  professional-looking mixtape videos.
+- **YouTube Chapters Generator** (`youtube_chapters.py`): Converts tracklists
+  into YouTube-compatible chapter timestamps for video descriptions.
 
 ## Requirements
 
+- macOS
+- Final Cut Pro
 - Python 3.6+
 - FFProbe (for audio duration detection in FCPXML generator)
   - Install via Homebrew: `brew install ffmpeg`
@@ -130,6 +136,23 @@ Create a file called `Tracklist.txt` with content like:
   - Copy the generated chapters directly into your YouTube video description
   - Chapters appear in the video player when properly formatted
   - Maximum 100 chapters per video
+
+## Todo List
+
+Below are a list of features I would like to be added in the future. These are
+also good ideas for pull requests, if you would like to help out.
+
+- Add support for animated background images
+
+## Contributing
+
+All contributions are welcome!
+
+- Fork this repository
+- Create a branch for your changes
+- Make your changes
+- Commit and push your changes
+- Submit a pull request
 
 ## Troubleshooting
 
