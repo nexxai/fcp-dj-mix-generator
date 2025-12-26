@@ -397,7 +397,7 @@ if __name__ == "__main__":
     )
 
     # Save to file
-    output_file = f"{mixtape_name.replace(' ', '_')}_Corrected.fcpxml"
+    output_file = f"{mixtape_name.replace(' ', '_')}.fcpxml"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(xml_content)
 
