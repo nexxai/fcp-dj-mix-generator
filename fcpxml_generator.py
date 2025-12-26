@@ -295,6 +295,26 @@ def generate_xml(
             old_param[::-1], opacity_animation[::-1], 1
         )[::-1]
 
+        # Add transition to the final title spine
+        # Calculate transition offset: 5 seconds before the end of the final title
+        total_frames = get_frames(last_offset) + get_frames(last_duration)
+        transition_offset_frames = total_frames - 5 * 24000
+        transition_offset = f"{transition_offset_frames}/24000s"
+        transition_xml = f"""
+            <transition name="Cross Dissolve" offset="{transition_offset}" duration="80080/24000s">
+                <filter-video ref="r2" name="Cross Dissolve">
+                    <data key="effectConfig">YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGlCwwVFhdVJG51bGzTDQ4PEBIUV05TLmtleXNaTlMub2JqZWN0c1YkY2xhc3OhEYACoROAA4AEXXBsdWdpblZlcnNpb24QAdIYGRobWiRjbGFzc25hbWVYJGNsYXNzZXNfEBNOU011dGFibGVEaWN0aW9uYXJ5oxocHVxOU0RpY3Rpb25hcnlYTlNPYmplY3QIERokKTI3SUxRU1lfZm55gIKEhoiKmJqfqrPJzdoAAAAAAAABAQAAAAAAAAAeAAAAAAAAAAAAAAAAAAAA4w==</data>
+                    <param name="Look" key="1" value="11 (Video)"/>
+                    <param name="Amount" key="2" value="50"/>
+                    <param name="Ease" key="50" value="2 (In &amp; Out)"/>
+                    <param name="Ease Amount" key="51" value="0"/>
+                </filter-video>
+                <filter-audio ref="r3" name="Audio Crossfade"/>
+            </transition>"""
+        # Insert transition into the last spine, before </spine>
+        parts = all_spines.rsplit("</spine>", 1)
+        all_spines = parts[0] + transition_xml + "\n            </spine>" + parts[1]
+
     # Complete XML template
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fcpxml>
