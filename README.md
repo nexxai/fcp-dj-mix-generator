@@ -1,10 +1,12 @@
-# Final Cut Pro / DJ Mix Generator
+# DJ Mix Generator
 
-A set of Python scripts to convert DJ mixtape tracklists into formats suitable
-for video production and YouTube uploads.
+A set of Python scripts to convert an Ableton mix to a YouTube-compatible video
 
 ## Features
 
+- **Ableton tracklist generator** (`generate_tracklist.py`): Reads the list of
+  audio files from your Ableton project and creates a text file with track
+  information
 - **FCPXML Generator** (`fcpxml_generator.py`): Creates Final Cut Pro XML files
   with automatic track title overlays, transitions, and fade effects for
   professional-looking mixtape videos.
@@ -14,6 +16,7 @@ for video production and YouTube uploads.
 ## Requirements
 
 - macOS
+- Ableton (tested on v12+)
 - Final Cut Pro
 - Python 3.6+
 - FFProbe (for audio duration detection in FCPXML generator)
@@ -28,7 +31,7 @@ for video production and YouTube uploads.
 
 ## Tracklist Format
 
-Both scripts expect a tracklist file with the following format:
+The FCP and YouTube scripts expect a tracklist file with the following format:
 
 ```
 1. Artist Name - Track Title - HH:MM:SS
@@ -38,12 +41,30 @@ Both scripts expect a tracklist file with the following format:
 
 **Important Notes:**
 
-- Each track starts on a new line
-- Format must be: `Number. Artist - Track Title - HH:MM:SS`
+- The tracklist generator will not add timestamps and so you will need to add
+  them manually before using the other scripts
+- Each track must start on a new line
+- Format must be: `Track Number. Artist - Track Title - HH:MM:SS`
 - Timestamps should be in 24-hour format (HH:MM:SS)
 - The first track should start at 00:00:00
 
 ## Usage
+
+### Tracklist Generator
+
+**NOTE:** It is assumed that the audio files used in your Ableton project are
+named like: `CAMELOT - BPM - Trackname` If this is not the case, you will
+need to modify the regex labelled 'file_name' in `generate_tracklist.py`
+to match your naming scheme.
+
+1. Make a copy of your Ableton project
+2. Run the script to generate a tracklist:
+   `python3 generate_tracklist.py <project_file>`
+   For example:
+   `python3 generate_tracklist.py '2025 Winter Mixtape.als'`
+3. The tracklist will be saved in the current folder as `tracklist.txt` however,
+   this file will still need manual attention. The file will _not_ contain
+   timestamps so these must be added manually for the other scripts to work.
 
 ### FCPXML Generator
 
