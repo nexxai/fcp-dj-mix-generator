@@ -1,2 +1,6 @@
 *.fcpxml
 __pycache__
+test_data/
+tracklist.txt
+*.png
+.DS_Store
