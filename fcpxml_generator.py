@@ -29,6 +29,7 @@ import re
 import os
 import subprocess
 import json
+import math
 from urllib.parse import quote
 
 
@@ -115,18 +116,39 @@ def calculate_duration(current_timestamp, next_timestamp):
 def calculate_last_track_duration(last_timestamp, total_length):
     """Calculate duration from last track to end of video"""
     last_seconds = timestamp_to_seconds(last_timestamp)
-    total_seconds = timestamp_to_seconds(total_length)
+    total_seconds = total_length
 
     # Calculate duration in seconds
     duration_seconds = total_seconds - last_seconds
 
-    # Convert to frames
-    duration_frames = duration_seconds * 24000
-
-    # Round to nearest multiple of 1001
-    duration_frames = (duration_frames // 1001) * 1001
+    duration_frames = seconds_to_fcpxml_frames(duration_seconds)
 
     return f"{duration_frames}/24000s"
+
+
+def seconds_to_fcpxml_frames(seconds):
+    """Convert seconds to an FCPXML duration on a 23.976fps frame boundary."""
+    frames = math.ceil(seconds * 24000)
+    frames = math.ceil(frames / 1001) * 1001
+
+    return frames
+
+
+def seconds_to_fcpxml_duration(seconds):
+    """Convert seconds to an FCPXML duration string."""
+    return f"{seconds_to_fcpxml_frames(seconds)}/24000s"
+
+
+def frames_to_fcpxml_duration(frames):
+    """Convert 24000-based frame ticks to an FCPXML duration string."""
+    return f"{frames}/24000s"
+
+
+def seconds_to_audio_duration(seconds, sample_rate=44100):
+    """Convert seconds to an audio asset duration string."""
+    samples = math.ceil(seconds * sample_rate)
+
+    return f"{samples}/{sample_rate}s"
 
 
 def get_audio_duration(audio_file_path):
@@ -176,10 +198,11 @@ def generate_title_spine(track_num, artist, track_title, offset, duration):
     """Generate a spine element for a single track title"""
     artist_escaped = escape_xml(artist)
     track_escaped = escape_xml(track_title)
+    shadow = 'shadowColor="0 0 0 0.75" shadowOffset="4 -4" shadowBlurRadius="8"'
 
     return f"""            <!-- Track {track_num}: {artist} - {offset} - duration: {duration} -->
             <spine lane="2" offset="{offset}">
-                <title ref="r6" offset="0s" name="Track {track_num}" start="86495409/24000s" duration="{duration}">
+                <title ref="r6" offset="0s" name="{artist} - {track_title}" start="86495409/24000s" duration="{duration}">
                     <param name="Layout Method" key="9999/10003/13260/11488/2/314" value="1 (Paragraph)"/>
                     <param name="Left Margin" key="9999/10003/13260/11488/2/323" value="-1728"/>
                     <param name="Right Margin" key="9999/10003/13260/11488/2/324" value="1728"/>
@@ -224,10 +247,10 @@ def generate_title_spine(track_num, artist, track_title, offset, duration):
                         <text-style ref="ts{track_num * 2}">{track_escaped}</text-style>
                     </text>
                     <text-style-def id="ts{track_num * 2 - 1}">
-                        <text-style font="Exan" fontSize="112" fontFace="Regular" fontColor="1 1 1 1" lineSpacing="-19"/>
+                        <text-style font="Exan" fontSize="112" fontFace="Regular" fontColor="1 1 1 1" lineSpacing="-19" {shadow}/>
                     </text-style-def>
                     <text-style-def id="ts{track_num * 2}">
-                        <text-style font="Exan" fontSize="88" fontFace="Regular" fontColor="1 1 1 1" tabStops="724.965C"/>
+                        <text-style font="Exan" fontSize="88" fontFace="Regular" fontColor="1 1 1 1" tabStops="724.965C" {shadow}/>
                     </text-style-def>
                 </title>
             </spine>"""
@@ -253,6 +276,13 @@ def generate_xml(
     # Create library name from mixtape name (sanitize for filesystem)
     library_name = re.sub(r'[<>:"/\\|?*]', "", mixtape_name).replace(" ", "_")
     library_location = f"{library_name}.fcpbundle/"
+    timeline_duration = seconds_to_fcpxml_duration(total_length)
+    timeline_frames = seconds_to_fcpxml_frames(total_length)
+    sequence_duration = frames_to_fcpxml_duration(timeline_frames + 1001)
+    background_transition_offset = frames_to_fcpxml_duration(
+        max(0, timeline_frames - 86086)
+    )
+    audio_asset_duration = seconds_to_audio_duration(total_length)
 
     # Generate all title spines
     title_spines = []
@@ -336,7 +366,7 @@ def generate_xml(
         </asset>
         <format id="r5" name="FFVideoFormatRateUndefined" width="1920" height="1080" colorSpace="1-13-1"/>
         <effect id="r6" name="Lower Third Text &amp; Subhead" uid=".../Titles.localized/Basic Text.localized/Lower Third Text &amp; Subhead.localized/Lower Third Text &amp; Subhead.moti"/>
-        <asset id="r7" name="{mixtape_name_escaped}" uid="6FCB7FC43C8E68F64EB9EC1C5AE17A37" start="0s" duration="300779456/44100s" hasAudio="1" audioSources="1" audioChannels="2" audioRate="44100">
+        <asset id="r7" name="{mixtape_name_escaped}" uid="6FCB7FC43C8E68F64EB9EC1C5AE17A37" start="0s" duration="{audio_asset_duration}" hasAudio="1" audioSources="1" audioChannels="2" audioRate="44100">
             <media-rep kind="original-media" sig="6FCB7FC43C8E68F64EB9EC1C5AE17A37" src="{audio_url}"/>
             <metadata>
                 <md key="com.apple.proapps.mio.ingestDate" value="2025-09-14 12:48:05 -0600"/>
@@ -346,7 +376,7 @@ def generate_xml(
     <library location="{library_location}">
         <event name="2024-11-18" uid="10271763-49DA-41DB-9206-72C18456B4A8">
             <project name="{mixtape_name_escaped}" uid="A1866706-F89F-45A2-B732-5A5FA035656E" modDate="2025-12-25 16:16:24 -0700">
-                <sequence format="r1" duration="166023858/24000s" tcStart="0s" tcFormat="NDF" renderFormat="FFRenderFormatProRes422LT" audioLayout="stereo" audioRate="44.1k">
+                <sequence format="r1" duration="{sequence_duration}" tcStart="0s" tcFormat="NDF" renderFormat="FFRenderFormatProRes422LT" audioLayout="stereo" audioRate="44.1k">
                     <spine>
                         <gap name="Gap" offset="0s" start="86400314/24000s" duration="1001/24000s">
                             <spine lane="1" offset="43200157/12000s">
@@ -360,8 +390,8 @@ def generate_xml(
                                     </filter-video>
                                     <filter-audio ref="r3" name="Audio Crossfade"/>
                                 </transition>
-                                <video ref="r4" offset="0s" name="{mixtape_name_escaped}" start="3600s" duration="163688525/24000s"/>
-                                <transition name="Cross Dissolve" offset="163602439/24000s" duration="86086/24000s">
+                                <video ref="r4" offset="0s" name="{mixtape_name_escaped}" start="3600s" duration="{timeline_duration}"/>
+                                <transition name="Cross Dissolve" offset="{background_transition_offset}" duration="86086/24000s">
                                     <filter-video ref="r2" name="Cross Dissolve">
                                         <data key="effectConfig">YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGlCwwVFhdVJG51bGzTDQ4PEBIUV05TLmtleXNaTlMub2JqZWN0c1YkY2xhc3OhEYACoROAA4AEXXBsdWdpblZlcnNpb24QAdIYGRobWiRjbGFzc25hbWVYJGNsYXNzZXNfEBNOU011dGFibGVEaWN0aW9uYXJ5oxocHVxOU0RpY3Rpb25hcnlYTlNPYmplY3QIERokKTI3SUxRU1lfZm55gIKEhoiKmJqfqrPJzdoAAAAAAAABAQAAAAAAAAAeAAAAAAAAAAAAAAAAAAAA4w==</data>
                                         <param name="Look" key="1" value="11 (Video)"/>
@@ -373,7 +403,7 @@ def generate_xml(
                                 </transition>
                             </spine>
                         </gap>
-                        <asset-clip ref="r7" offset="1001/24000s" name="{mixtape_name_escaped}" duration="163688525/24000s" audioRole="music">
+                        <asset-clip ref="r7" offset="1001/24000s" name="{mixtape_name_escaped}" duration="{timeline_duration}" audioRole="music">
 {all_spines}
                         </asset-clip>
                     </spine>
@@ -450,7 +480,7 @@ if __name__ == "__main__":
 
     # Generate XML
     xml_content = generate_xml(
-        tracks, mixtape_name, background_image, audio_file, total_length
+        tracks, mixtape_name, background_image, audio_file, audio_duration_seconds
     )
 
     # Save to file
